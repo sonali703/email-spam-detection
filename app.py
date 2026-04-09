@@ -4,6 +4,7 @@ import os
 
 app = Flask(__name__)
 
+# Load model
 model = pickle.load(open('model.pkl', 'rb'))
 vectorizer = pickle.load(open('vectorizer.pkl', 'rb'))
 
@@ -14,13 +15,15 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     message = request.form['message']
-    data = vectorizer.transform([message])
-    result = model.predict(data)
+    vec = vectorizer.transform([message])
+    
+    result = model.predict(vec)[0]
+    prob = model.predict_proba(vec)[0]
 
-    if result[0] == 1:
-        output = "Spam Message ❌"
+    if result == 1:
+        output = f"Spam ❌ ({prob[1]*100:.2f}%)"
     else:
-        output = "Not Spam ✅"
+        output = f"Not Spam ✅ ({prob[0]*100:.2f}%)"
 
     return render_template('index.html', prediction=output)
 
